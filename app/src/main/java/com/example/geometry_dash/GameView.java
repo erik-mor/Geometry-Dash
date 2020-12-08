@@ -1,25 +1,23 @@
 package com.example.geometry_dash;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.Rect;
-import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.SurfaceView;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class GameView extends SurfaceView implements Runnable {
 
-    private int JUMP_STEP = 40;
-    private int SPEED = 25;
+    private final int JUMP_STEP = 20;
+    private final int N_JUMP_STEPS = 10;
+    private int SPEED = 20;
+
+    private int RECTANGLE_TOP = 540;
+    private int RECTANGLE_BOTTOM = 640;
 
     private Thread thread;
     private boolean isPlaying;
@@ -27,21 +25,25 @@ public class GameView extends SurfaceView implements Runnable {
     private float screenRationX, screenRationY;
     private Paint paint;
     private Paint rectPaint;
+    private Paint linePaint;
     private final Background background1, background2;
     private boolean isJumping;
     private int jumpState;
     private final Rect rect;
-    private List<Obstacle> obstacleList;
+//    private final RectF rect;
+//    private final Matrix rectMatrix;
+    private Obstacle obstacle;
+    private int[] obstacles = {1, 2, 1, 1, 1, 2, 2, 2, 2, 1};
+    private int current = 0;
 
-
-    public GameView(Context context, int screenX, int screenY) {
+    public GameView(Context context, int screenX, int screenY, int level) {
         super(context);
 
         this.screenX = screenX;
         this.screenY = screenY;
 
-        background1 = new Background(screenX, screenY, getResources());
-        background2 = new Background(screenX, screenY, getResources());
+        background1 = new Background(screenX, screenY, getResources(), level);
+        background2 = new Background(screenX, screenY, getResources(), level);
         background2.x = screenX;
 
         paint = new Paint();
@@ -49,15 +51,18 @@ public class GameView extends SurfaceView implements Runnable {
         rectPaint.setColor(Color.BLACK);
         rectPaint.setStrokeWidth(5);
 
-        rect = new Rect(120, 550, 220 ,655);
+        linePaint = new Paint();
+        linePaint.setColor(Color.LTGRAY);
+        linePaint.setStrokeWidth(5);
+
+        rect = new Rect(150, RECTANGLE_TOP, 250 ,RECTANGLE_BOTTOM);
+//        rect = new RectF(120, 550, 220 ,655);
+//        rectMatrix = new Matrix();
 
         isJumping = false;
         jumpState = 0;
 
-        obstacleList = new ArrayList<>();
-
-        Obstacle obstacle1 = new Obstacle(800, 655, 70, 100);
-        obstacleList.add(obstacle1);
+        obstacle = new Obstacle(800, 640, obstacles[current]);
     }
 
     @Override
@@ -65,6 +70,7 @@ public class GameView extends SurfaceView implements Runnable {
         while (isPlaying) {
             update();
             draw();
+            checkForCollision();
             sleep();
         }
     }
@@ -81,25 +87,38 @@ public class GameView extends SurfaceView implements Runnable {
             background2.x = screenX;
         }
 
-        for (Obstacle o: obstacleList) {
-            o.setX(o.getX() - SPEED);
-            if (o.getX() <= 0) {
-                o.setX(screenX - o.getWidth());
-            }
-        }
+        obstacle.setX(obstacle.getX() - SPEED);
 
+        int margin = obstacle.type == 1 ? obstacle.WIDTH : obstacle.WIDTH * 2;
+        if (obstacle.getX() + margin <= 0) {
+            current++;
+            if (current >= obstacles.length) {
+                current = 0;
+            }
+            obstacle.setType(obstacles[current]);
+            obstacle.setX(screenX - obstacle.WIDTH);
+        }
 
         if (isJumping) {
             jumpState++;
-            if (jumpState > 10) {
+            // back on ground
+            if (jumpState > (2 * N_JUMP_STEPS)) {
                 isJumping = false;
                 jumpState = 0;
-            } else if (jumpState > 5) {
+
+            // going down
+            } else if (jumpState > N_JUMP_STEPS) {
                 rect.top += JUMP_STEP;
                 rect.bottom += JUMP_STEP;
+//                rectMatrix.setRotate(jumpState * 36, rect.centerX(), rect.centerY());
+//                rectMatrix.mapRect(rect);
+
+            // going up
             } else {
                 rect.top -= JUMP_STEP;
                 rect.bottom -= JUMP_STEP;
+//                rectMatrix.setRotate(jumpState * 36, rect.centerX(), rect.centerY());
+//                rectMatrix.mapRect(rect);
             }
         }
     }
@@ -109,13 +128,32 @@ public class GameView extends SurfaceView implements Runnable {
             Canvas canvas = getHolder().lockCanvas();
             canvas.drawBitmap(background1.background, background1.x, background1.y, paint);
             canvas.drawBitmap(background2.background, background2.x, background2.y, paint);
+            canvas.drawLine(0, 640, screenX, 640, linePaint);
 
+
+//            if (isJumping) {
+//                canvas.save();
+//                canvas.rotate(jumpState * 36);
+//                canvas.drawRect(rect, rectPaint);
+//                canvas.restore();
+//            } else {
+//                canvas.drawRect(rect, rectPaint);
+//            }
             canvas.drawRect(rect, rectPaint);
-            for (Obstacle o: obstacleList) {
-                o.draw(canvas, rectPaint);
-            }
+
+            obstacle.draw(canvas, rectPaint);
 
             getHolder().unlockCanvasAndPost(canvas);
+        }
+    }
+
+    private void checkForCollision() {
+
+        if (isJumping) {
+            if (obstacle.isInArea(rect.right, rect.bottom) && obstacle.frontCollision(rect)) pause();
+            else if(obstacle.isInArea(rect.left, rect.bottom) && obstacle.backCollision(rect)) pause();
+        } else {
+            if (obstacle.xIsInArea(rect.right)) pause();
         }
     }
 
@@ -133,6 +171,16 @@ public class GameView extends SurfaceView implements Runnable {
         thread.start();
     }
 
+    public void restart() {
+        resume();
+        rect.bottom = RECTANGLE_BOTTOM;
+        rect.top = RECTANGLE_TOP;
+        current = 0;
+        obstacle = new Obstacle(800, 640, obstacles[current]);
+        isJumping = false;
+        jumpState = 0;
+    }
+
     public void pause() {
         try {
             isPlaying = false;
@@ -146,11 +194,20 @@ public class GameView extends SurfaceView implements Runnable {
     public boolean onTouchEvent(MotionEvent event) {
 
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            if (!isJumping) {
-                isJumping = true;
+            if (isPlaying) {
+                if (!isJumping) {
+                    isJumping = true;
+                }
+            } else {
+                restart();
             }
         }
 
         return super.onTouchEvent(event);
     }
+
+    public static int isLeft(Point a, Point b, int rectX, int rectY){
+        return ((b.x - a.x)*((rectY * -1) - (a.y * -1)) - ((b.y * -1) - (a.y * -1))*(rectX - a.x));
+    }
+
 }

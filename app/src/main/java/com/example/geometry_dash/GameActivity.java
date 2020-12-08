@@ -10,6 +10,8 @@ import android.view.WindowManager;
 public class GameActivity extends AppCompatActivity {
     private GameView gameView;
 
+    private int[] levels = {R.drawable.level1, R.drawable.level2};
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -19,7 +21,9 @@ public class GameActivity extends AppCompatActivity {
         Point point = new Point();
         getWindowManager().getDefaultDisplay().getSize(point);
 
-        gameView = new GameView(this, point.x, point.y);
+        int level = getIntent().getIntExtra("level", 0);
+
+        gameView = new GameView(this, point.x, point.y, levels[level]);
 
         setContentView(gameView);
     }
