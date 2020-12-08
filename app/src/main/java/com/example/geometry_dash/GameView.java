@@ -76,6 +76,7 @@ public class GameView extends SurfaceView implements Runnable {
     }
 
     private void update() {
+        // move background
         background1.x -= SPEED;
         background2.x -= SPEED;
 
@@ -87,8 +88,10 @@ public class GameView extends SurfaceView implements Runnable {
             background2.x = screenX;
         }
 
+        // move obstacle
         obstacle.setX(obstacle.getX() - SPEED);
 
+        // if obstacle is out of screen, move it to the start
         int margin = obstacle.type == 1 ? obstacle.WIDTH : obstacle.WIDTH * 2;
         if (obstacle.getX() + margin <= 0) {
             current++;
@@ -99,6 +102,7 @@ public class GameView extends SurfaceView implements Runnable {
             obstacle.setX(screenX - obstacle.WIDTH);
         }
 
+        // move rectangle up or down based on jump state
         if (isJumping) {
             jumpState++;
             // back on ground
@@ -129,7 +133,6 @@ public class GameView extends SurfaceView implements Runnable {
             canvas.drawBitmap(background1.background, background1.x, background1.y, paint);
             canvas.drawBitmap(background2.background, background2.x, background2.y, paint);
             canvas.drawLine(0, 640, screenX, 640, linePaint);
-
 
 //            if (isJumping) {
 //                canvas.save();
@@ -205,9 +208,4 @@ public class GameView extends SurfaceView implements Runnable {
 
         return super.onTouchEvent(event);
     }
-
-    public static int isLeft(Point a, Point b, int rectX, int rectY){
-        return ((b.x - a.x)*((rectY * -1) - (a.y * -1)) - ((b.y * -1) - (a.y * -1))*(rectX - a.x));
-    }
-
 }

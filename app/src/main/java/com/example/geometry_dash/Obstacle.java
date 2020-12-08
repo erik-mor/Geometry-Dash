@@ -6,8 +6,6 @@ import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.Rect;
 
-import java.util.List;
-
 public class Obstacle {
     private int x;
     private int y;
@@ -70,13 +68,13 @@ public class Obstacle {
 
     // check if front corner point is inside triangle
     public boolean frontCollision(Rect rect) {
-        return isLeft(point1, point2, rect.right, rect.bottom) <= 0;
+        return crossProduct(point1, point2, rect.right, rect.bottom) <= 0;
     }
 
     // check if back corner point is inside triangle
     public boolean backCollision(Rect rect) {
-        if (type == 1) return isLeft(point2, point3, rect.left, rect.bottom) <= 0;
-        else return isLeft(point5, point6, rect.left, rect.bottom) <= 0;
+        if (type == 1) return crossProduct(point2, point3, rect.left, rect.bottom) <= 0;
+        else return crossProduct(point5, point6, rect.left, rect.bottom) <= 0;
 
     }
 
@@ -99,7 +97,7 @@ public class Obstacle {
     }
 
     // compute cross product to determine on which side of line(from a to b) the point is -> to check for collision
-    public static int isLeft(Point a, Point b, int rectX, int rectY){
+    public static int crossProduct(Point a, Point b, int rectX, int rectY){
         return ((b.x - a.x)*((rectY * -1) - (a.y * -1)) - ((b.y * -1) - (a.y * -1))*(rectX - a.x));
     }
 
