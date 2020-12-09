@@ -3,7 +3,6 @@ package com.example.geometry_dash;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.Drawable;
 
 public class Background {
     int x = 0, y = 0;

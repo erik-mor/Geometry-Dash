@@ -4,13 +4,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.graphics.Point;
 import android.os.Bundle;
-import android.util.DisplayMetrics;
 import android.view.WindowManager;
 
 public class GameActivity extends AppCompatActivity {
     private GameView gameView;
-
-    private int[] levels = {R.drawable.level1, R.drawable.level2};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,8 +19,13 @@ public class GameActivity extends AppCompatActivity {
         getWindowManager().getDefaultDisplay().getSize(point);
 
         int level = getIntent().getIntExtra("level", 0);
+        String[] obstacles = getIntent().getStringExtra("obstacles").split("");
+        int[] intObstacles = new int[obstacles.length - 1];
+        for (int i = 0; i < intObstacles.length; i++) {
+            intObstacles[i] = Integer.parseInt(obstacles[i + 1]);
+        }
 
-        gameView = new GameView(this, point.x, point.y, levels[level]);
+        gameView = new GameView(this, point.x, point.y, level, intObstacles);
 
         setContentView(gameView);
     }

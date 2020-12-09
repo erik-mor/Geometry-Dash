@@ -1,6 +1,7 @@
 package com.example.geometry_dash;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,20 +14,20 @@ import androidx.annotation.Nullable;
 
 public class LevelAdapter extends ArrayAdapter<String> {
 
-    String[] levels;
-    int[] progress;
+    int length;
     Context mContext;
+    SharedPreferences sharedPreferences;
 
-    public LevelAdapter(@NonNull Context context, String[] levels, int[] progress) {
+    public LevelAdapter(@NonNull Context context, int length) {
         super(context, R.layout.level_info);
-        this.levels = levels;
-        this.progress = progress;
+        this.length = length;
         mContext = context;
+        sharedPreferences = context.getSharedPreferences("appData", Context.MODE_PRIVATE);
     }
 
     @Override
     public int getCount() {
-        return levels.length;
+        return length;
     }
 
     @NonNull
@@ -43,8 +44,11 @@ public class LevelAdapter extends ArrayAdapter<String> {
         } else {
             mViewHolder = (ViewHolder) convertView.getTag();
         }
-        mViewHolder.levelName.setText(levels[position]);
-        mViewHolder.levelProgress.setProgress(progress[position]);
+        String placeholder = "Level " + (position + 1);
+        int savedProgress = sharedPreferences.getInt("level" + position + "-progress", 0);
+        System.out.println("Here");
+        mViewHolder.levelName.setText(placeholder);
+        mViewHolder.levelProgress.setProgress(savedProgress);
 
         return convertView;
     }

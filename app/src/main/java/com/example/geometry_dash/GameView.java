@@ -1,6 +1,7 @@
 package com.example.geometry_dash;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
@@ -10,8 +11,13 @@ import android.graphics.Rect;
 import android.view.MotionEvent;
 import android.view.SurfaceView;
 
-public class GameView extends SurfaceView implements Runnable {
+import static android.content.Context.MODE_PRIVATE;
 
+public class GameView extends SurfaceView implements Runnable {
+    private final int[] backgroundImages = {R.drawable.level1, R.drawable.level2};
+
+    private final SharedPreferences sharedPreferences;
+    private SharedPreferences.Editor editor;
     private final int JUMP_STEP = 20;
     private final int N_JUMP_STEPS = 10;
     private int SPEED = 20;
@@ -33,17 +39,22 @@ public class GameView extends SurfaceView implements Runnable {
 //    private final RectF rect;
 //    private final Matrix rectMatrix;
     private Obstacle obstacle;
-    private int[] obstacles = {1, 2, 1, 1, 1, 2, 2, 2, 2, 1};
-    private int current = 0;
+    private final int[] obstacles;
+    private int current;
+    private int level;
 
-    public GameView(Context context, int screenX, int screenY, int level) {
+    public GameView(Context context, int screenX, int screenY, int level, int[] obstacles) {
         super(context);
+
+        sharedPreferences = getContext().getSharedPreferences("appData", MODE_PRIVATE);
+        editor = sharedPreferences.edit();
 
         this.screenX = screenX;
         this.screenY = screenY;
 
-        background1 = new Background(screenX, screenY, getResources(), level);
-        background2 = new Background(screenX, screenY, getResources(), level);
+        this.level = level;
+        background1 = new Background(screenX, screenY, getResources(), backgroundImages[level]);
+        background2 = new Background(screenX, screenY, getResources(), backgroundImages[level]);
         background2.x = screenX;
 
         paint = new Paint();
@@ -62,6 +73,8 @@ public class GameView extends SurfaceView implements Runnable {
         isJumping = false;
         jumpState = 0;
 
+        this.obstacles = obstacles;
+        current= 0;
         obstacle = new Obstacle(800, 640, obstacles[current]);
     }
 
@@ -153,10 +166,10 @@ public class GameView extends SurfaceView implements Runnable {
     private void checkForCollision() {
 
         if (isJumping) {
-            if (obstacle.isInArea(rect.right, rect.bottom) && obstacle.frontCollision(rect)) pause();
-            else if(obstacle.isInArea(rect.left, rect.bottom) && obstacle.backCollision(rect)) pause();
+            if (obstacle.isInArea(rect.right, rect.bottom) && obstacle.frontCollision(rect)) collision();
+            else if(obstacle.isInArea(rect.left, rect.bottom) && obstacle.backCollision(rect)) collision();
         } else {
-            if (obstacle.xIsInArea(rect.right)) pause();
+            if (obstacle.xIsInArea(rect.right)) collision();
         }
     }
 
@@ -174,7 +187,7 @@ public class GameView extends SurfaceView implements Runnable {
         thread.start();
     }
 
-    public void restart() {
+    private void restart() {
         resume();
         rect.bottom = RECTANGLE_BOTTOM;
         rect.top = RECTANGLE_TOP;
@@ -191,6 +204,21 @@ public class GameView extends SurfaceView implements Runnable {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    private void collision() {
+        int progress = (100 * current) / obstacles.length;
+        System.out.println(current);
+        System.out.println(obstacles.length);
+        System.out.println(progress);
+        int savedProgress = sharedPreferences.getInt("level" + level + "-progress", 0);
+        System.out.println("Level: " + level);
+        System.out.println(savedProgress);
+        if (savedProgress < progress) {
+            editor.putInt("level" + level + "-progress", progress);
+            editor.commit();
+        }
+        isPlaying = false;
     }
 
     @Override

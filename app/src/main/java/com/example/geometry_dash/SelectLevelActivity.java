@@ -3,6 +3,8 @@ package com.example.geometry_dash;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.res.AssetManager;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -11,11 +13,16 @@ import android.widget.ListView;
 import com.synnapps.carouselview.CarouselView;
 import com.synnapps.carouselview.ViewListener;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 public class SelectLevelActivity extends AppCompatActivity {
     ListView levelList;
 
-    String[] levels = {"Level 1", "Level 2"};
-    int[] progress = {50, 25};
+//    String[] levels = {"Level 1", "Level 2"};
+    int[] progress;
+    String[] levels;
+    SharedPreferences sharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,14 +30,38 @@ public class SelectLevelActivity extends AppCompatActivity {
         setContentView(R.layout.activity_select_level);
 
         levelList = (ListView) findViewById(R.id.levelList);
+        sharedPreferences = getSharedPreferences("appData", MODE_PRIVATE);
 
-        LevelAdapter adapter =  new LevelAdapter(SelectLevelActivity.this, levels, progress);
+        AssetManager assetManager = getAssets();
+        InputStream input;
+        try {
+            input = assetManager.open("levels.txt");
+            int size = input.available();
+            byte[] buffer = new byte[size];
+            input.read(buffer);
+            input.close();
+            // byte buffer into a string
+            String txt = new String(buffer);
+            levels = txt.split("\\n");
+            progress = new int[levels.length];
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        LevelAdapter adapter =  new LevelAdapter(SelectLevelActivity.this, levels.length);
         levelList.setAdapter(adapter);
 
         levelList.setOnItemClickListener((adapterView, view, i, l) -> {
             Intent intent = new Intent(getApplicationContext(), GameActivity.class);
             intent.putExtra("level", i);
+            intent.putExtra("obstacles", levels[i]);
             startActivity(intent);
         });
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
     }
 }
