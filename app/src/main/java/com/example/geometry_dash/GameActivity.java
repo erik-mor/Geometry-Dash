@@ -14,20 +14,25 @@ public class GameActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // fullscreen mode
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
+        // get screen dimensions
         Point point = new Point();
         getWindowManager().getDefaultDisplay().getSize(point);
 
+        // get info about level player has chosen
         int level = getIntent().getIntExtra("level", 0);
         String[] obstacles = getIntent().getStringExtra("obstacles").split("");
+
+        // convert to integer
         int[] intObstacles = new int[obstacles.length - 1];
         for (int i = 0; i < intObstacles.length; i++) {
             intObstacles[i] = Integer.parseInt(obstacles[i + 1]);
         }
 
+        // start game
         gameView = new GameView(this, point.x, point.y, level, intObstacles);
-
         setContentView(gameView);
     }
 

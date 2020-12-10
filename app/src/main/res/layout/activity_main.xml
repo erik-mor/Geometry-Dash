@@ -6,8 +6,6 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    z
-
     <ImageView
         android:id="@+id/imageView"
         android:layout_width="0dp"

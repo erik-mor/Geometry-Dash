@@ -26,37 +26,32 @@ public class GameView extends SurfaceView implements Runnable {
 
     private final int JUMP_STEP = 20;
     private final int N_JUMP_STEPS = 10;
-    private int SPEED = 20;
-
-    private int RECTANGLE_TOP = 540;
-    private int RECTANGLE_BOTTOM = 640;
-
-    private Thread thread;
+    private final int SPEED = 20;
+    private final int RECTANGLE_TOP = 540;
+    private final int BOTTOM = 640;
 
     private final int screenX, screenY;
-    private float screenRationX, screenRationY;
 
-    private Paint blickPaint;
-    private Paint paint;
-    private Paint rectPaint;
-    private Paint linePaint;
-    private Paint textPaint;
-    private Paint menuPaint;
+    private final Paint blickPaint;
+    private final Paint paint;
+    private final Paint rectPaint;
+    private final Paint linePaint;
+    private final Paint textPaint;
+    private final Paint menuPaint;
 
+    private Thread thread;
     private final Background background1, background2;
+    private final Rect rect;
+    private Obstacle obstacle;
 
     private boolean blick;
     private boolean isFinished;
     private boolean isPlaying;
     private boolean isJumping;
     private int jumpState;
-    private final Rect rect;
-//    private final RectF rect;
-//    private final Matrix rectMatrix;
-    private Obstacle obstacle;
     private final int[] obstacles;
+    private final int level;
     private int current;
-    private int level;
     private int score = 0;
 
     public GameView(Context context, int screenX, int screenY, int level, int[] obstacles) {
@@ -101,9 +96,7 @@ public class GameView extends SurfaceView implements Runnable {
         blickPaint = new Paint();
         blickPaint.setStrokeWidth(25);
 
-        rect = new Rect(150, RECTANGLE_TOP, 250 ,RECTANGLE_BOTTOM);
-//        rect = new RectF(120, 550, 220 ,655);
-//        rectMatrix = new  Matrix();
+        rect = new Rect(150, RECTANGLE_TOP, 250 , BOTTOM);
 
         blick = false;
         isFinished = false;
@@ -131,6 +124,7 @@ public class GameView extends SurfaceView implements Runnable {
             background1.x -= SPEED;
             background2.x -= SPEED;
 
+            // move background images to simulate movement
             if (background1.x + background1.background.getWidth() < 0) {
                 background1.x = screenX;
             }
@@ -146,15 +140,16 @@ public class GameView extends SurfaceView implements Runnable {
             int margin = obstacle.type == 1 ? obstacle.WIDTH : obstacle.WIDTH * 2;
             if (obstacle.getX() + margin <= 0) {
                 current++;
+                // if it was last obstacle game is finished
                 if (current >= obstacles.length) {
-//                System.out.println("Song is at: " + levelMusic.getCurrentPosition());
-//                collision();
                     isFinished = true;
+                // else get next obstacle
                 } else {
                     obstacle.setType(obstacles[current]);
                     obstacle.setX(screenX - obstacle.WIDTH);
                 }
             }
+        // if game is finished successfully move rectangle into the gate on right side of screen
         } else {
             if (rect.left <= screenX) {
                 rect.left += SPEED;
@@ -176,48 +171,39 @@ public class GameView extends SurfaceView implements Runnable {
             } else if (jumpState > N_JUMP_STEPS) {
                 rect.top += JUMP_STEP;
                 rect.bottom += JUMP_STEP;
-//                rectMatrix.setRotate(jumpState * 36, rect.centerX(), rect.centerY());
-//                rectMatrix.mapRect(rect);
 
             // going up
             } else {
                 rect.top -= JUMP_STEP;
                 rect.bottom -= JUMP_STEP;
-//                rectMatrix.setRotate(jumpState * 36, rect.centerX(), rect.centerY());
-//                rectMatrix.mapRect(rect);
             }
         }
     }
 
     private void draw() {
         if (getHolder().getSurface().isValid()) {
+            // get canvas
             Canvas canvas = getHolder().lockCanvas();
+
+            // draw moving background image and bottom line
             canvas.drawBitmap(background1.background, background1.x, background1.y, paint);
             canvas.drawBitmap(background2.background, background2.x, background2.y, paint);
             canvas.drawLine(0, 640, screenX, 640, linePaint);
 
-//            if (isJumping) {
-//                canvas.save();
-//                canvas.rotate(jumpState * 36);
-//                canvas.drawRect(rect, rectPaint);
-//                canvas.restore();
-//            } else {
-//                canvas.drawRect(rect, rectPaint);
-//            }
-            canvas.drawRect(rect, rectPaint);
-
+            // if game finished successfully draw end blicking gate or else draw obstacle
             if (!isFinished) {
                 obstacle.draw(canvas, rectPaint);
-            }
-
-            if (isFinished) {
+            } else {
                 if (blick) blickPaint.setColor(Color.LTGRAY);
                 else blickPaint.setColor(Color.DKGRAY);
                 blick = !blick;
                 canvas.drawLine(screenX, 0, screenX, screenY, blickPaint);
             }
 
-            if (!isPlaying) {
+            // if game ends draw info text and menu button
+            if (isPlaying) {
+                canvas.drawRect(rect, rectPaint);
+            } else {
                 if (isFinished) {
                     canvas.drawText("Level finished !!!", 350, screenY >> 1, textPaint);
                 } else {
@@ -231,6 +217,8 @@ public class GameView extends SurfaceView implements Runnable {
 
     private void checkForCollision() {
 
+        // if in middle of jump check check if left or right bottom corner is in are of obstacle
+        // if yes check if it actually collides with obstacle
         if (isJumping) {
             if (obstacle.isInArea(rect.right, rect.bottom) && obstacle.frontCollision(rect)) collision();
             else if(obstacle.isInArea(rect.left, rect.bottom) && obstacle.backCollision(rect)) collision();
@@ -255,7 +243,7 @@ public class GameView extends SurfaceView implements Runnable {
     }
 
     private void restart() {
-        rect.set(150, RECTANGLE_TOP, 250 ,RECTANGLE_BOTTOM);
+        rect.set(150, RECTANGLE_TOP, 250 , BOTTOM);
         current = 0;
         obstacle = new Obstacle(screenX - 100, 640, obstacles[current]);
         isJumping = false;
@@ -273,15 +261,16 @@ public class GameView extends SurfaceView implements Runnable {
         }
     }
 
+    // when game ends successfully
     private void end() {
         isPlaying = false;
-        rect.setEmpty();
         endMusic.start();
         levelMusic.stop();
-        setProgress();
         draw();
+        setProgress();
     }
 
+    // ved collision happens print info on screen and stop music
     private void collision() {
         if (explode.isPlaying()) {
             explode.pause();
@@ -296,6 +285,7 @@ public class GameView extends SurfaceView implements Runnable {
         draw();
     }
 
+    // get current best progress from shared pref and if it is smaller then update
     private void setProgress() {
         score = (100 * current) / obstacles.length;
         int savedProgress = sharedPreferences.getInt("level" + level + "-progress", 0);
@@ -308,14 +298,18 @@ public class GameView extends SurfaceView implements Runnable {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            // jump
             if (isPlaying) {
                 if (!isJumping) {
                     isJumping = true;
                 }
             } else {
+                // when game ended and player taps on the screen
+                // if level is finished go to main activity
                 if (isFinished) {
                     pause();
                     getContext().startActivity(new Intent(getContext(), MainActivity.class));
+                // if level ended in collision go again
                 } else {
                     if (event.getX() <= 100 && event.getY() <= 100) {
                         pause();

@@ -19,18 +19,17 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class SelectLevelActivity extends AppCompatActivity {
-    ListView levelList;
-
-//    String[] levels = {"Level 1", "Level 2"};
-    int[] progress;
-    String[] levels;
     SharedPreferences sharedPreferences;
+    ListView levelList;
+    String[] levels;
     MediaPlayer playSound;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select_level);
+
+        // full screen mode
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         playSound = MediaPlayer.create(this, R.raw.play);
@@ -38,6 +37,7 @@ public class SelectLevelActivity extends AppCompatActivity {
         levelList = (ListView) findViewById(R.id.levelList);
         sharedPreferences = getSharedPreferences("appData", MODE_PRIVATE);
 
+        // get levels from assets
         AssetManager assetManager = getAssets();
         InputStream input;
         try {
@@ -46,17 +46,19 @@ public class SelectLevelActivity extends AppCompatActivity {
             byte[] buffer = new byte[size];
             input.read(buffer);
             input.close();
+
             // byte buffer into a string
             String txt = new String(buffer);
+
+            // each level is on new line
             levels = txt.split("\\n");
-            progress = new int[levels.length];
         } catch (IOException e) {
             e.printStackTrace();
         }
 
+        // initialize custom list adapter to display levels
         LevelAdapter adapter =  new LevelAdapter(SelectLevelActivity.this, levels.length);
         levelList.setAdapter(adapter);
-
         levelList.setOnItemClickListener((adapterView, view, i, l) -> {
             playSound.start();
             Intent intent = new Intent(getApplicationContext(), GameActivity.class);
@@ -69,6 +71,5 @@ public class SelectLevelActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-
     }
 }

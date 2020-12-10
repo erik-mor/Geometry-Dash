@@ -7,6 +7,9 @@ import android.graphics.Point;
 import android.graphics.Rect;
 
 public class Obstacle {
+    public int WIDTH = 55;
+    public int HEIGHT = 100;
+
     private int x;
     private int y;
 
@@ -20,8 +23,6 @@ public class Obstacle {
     Point point8;
     Point point9;
 
-    public int WIDTH = 55;
-    public int HEIGHT = 100;
     public int type;
 
     public Obstacle(int x, int y, int type) {
@@ -42,6 +43,7 @@ public class Obstacle {
 
     }
 
+    // draw triangle path
     public Path getPath(Point p1, Point p2, Point p3) {
         Path path = new Path();
         path.setFillType(Path.FillType.EVEN_ODD);
@@ -52,6 +54,7 @@ public class Obstacle {
         return path;
     }
 
+    // drew obstacles based on type
     public void draw(Canvas canvas, Paint paint) {
         point1.set(this.x, this.y);
         point2.set(this.x + this.WIDTH / 2, this.y - this.HEIGHT);

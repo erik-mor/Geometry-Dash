@@ -34,26 +34,31 @@ public class LevelAdapter extends ArrayAdapter<String> {
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
         ViewHolder mViewHolder = new ViewHolder();
-
         if (convertView == null) {
             LayoutInflater mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             convertView = mInflater.inflate(R.layout.level_info, parent, false);
+            mViewHolder.progressText = (TextView) convertView.findViewById(R.id.progressText);
             mViewHolder.levelName = (TextView) convertView.findViewById(R.id.levelName);
             mViewHolder.levelProgress = (ProgressBar) convertView.findViewById(R.id.levelProgress);
             convertView.setTag(mViewHolder);
         } else {
             mViewHolder = (ViewHolder) convertView.getTag();
         }
-        String placeholder = "Level " + (position + 1);
+
+        // get level progress from shared preferences
         int savedProgress = sharedPreferences.getInt("level" + position + "-progress", 0);
-        System.out.println("Here");
+        String placeholder = "Level " + (position + 1);
+        String progressText = "Progress: " + savedProgress + "%";
         mViewHolder.levelName.setText(placeholder);
         mViewHolder.levelProgress.setProgress(savedProgress);
+        mViewHolder.progressText.setText(progressText);
 
         return convertView;
     }
 
+    // helper class for faster rendering
     static class ViewHolder{
+        TextView progressText;
         TextView levelName;
         ProgressBar levelProgress;
     }
