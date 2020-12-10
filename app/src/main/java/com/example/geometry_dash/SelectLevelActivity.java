@@ -5,8 +5,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
@@ -23,11 +25,15 @@ public class SelectLevelActivity extends AppCompatActivity {
     int[] progress;
     String[] levels;
     SharedPreferences sharedPreferences;
+    MediaPlayer playSound;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select_level);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+        playSound = MediaPlayer.create(this, R.raw.play);
 
         levelList = (ListView) findViewById(R.id.levelList);
         sharedPreferences = getSharedPreferences("appData", MODE_PRIVATE);
@@ -52,6 +58,7 @@ public class SelectLevelActivity extends AppCompatActivity {
         levelList.setAdapter(adapter);
 
         levelList.setOnItemClickListener((adapterView, view, i, l) -> {
+            playSound.start();
             Intent intent = new Intent(getApplicationContext(), GameActivity.class);
             intent.putExtra("level", i);
             intent.putExtra("obstacles", levels[i]);

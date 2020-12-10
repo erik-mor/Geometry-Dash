@@ -16,8 +16,11 @@ public class Obstacle {
     Point point4;
     Point point5;
     Point point6;
+    Point point7;
+    Point point8;
+    Point point9;
 
-    public int WIDTH = 70;
+    public int WIDTH = 55;
     public int HEIGHT = 100;
     public int type;
 
@@ -33,36 +36,47 @@ public class Obstacle {
         point4 = new Point();
         point5 = new Point();
         point6 = new Point();
+        point7 = new Point();
+        point8 = new Point();
+        point9 = new Point();
+
+    }
+
+    public Path getPath(Point p1, Point p2, Point p3) {
+        Path path = new Path();
+        path.setFillType(Path.FillType.EVEN_ODD);
+        path.moveTo(p1.x, p1.y);
+        path.lineTo(p2.x, p2.y);
+        path.lineTo(p3.x, p3.y);
+        path.close();
+        return path;
     }
 
     public void draw(Canvas canvas, Paint paint) {
         point1.set(this.x, this.y);
         point2.set(this.x + this.WIDTH / 2, this.y - this.HEIGHT);
         point3.set(this.x + this.WIDTH, this.y);
-
-        Path path = new Path();
-        path.setFillType(Path.FillType.EVEN_ODD);
-        path.moveTo(point1.x, point1.y);
-        path.lineTo(point2.x, point2.y);
-        path.lineTo(point3.x, point3.y);
-        path.close();
-
-        canvas.drawPath(path, paint);
+        canvas.drawPath(getPath(point1, point2, point3), paint);
 
         // if type is 2 draw another triangle next to first one
         if (type == 2) {
             point4.set(this.x + this.WIDTH, this.y);
             point5.set(point4.x + this.WIDTH / 2, this.y - this.HEIGHT);
             point6.set(point4.x + this.WIDTH, this.y);
+            canvas.drawPath(getPath(point4, point5, point6), paint);
+        }
 
-            path = new Path();
-            path.setFillType(Path.FillType.EVEN_ODD);
-            path.moveTo(point4.x, point4.y);
-            path.lineTo(point5.x, point5.y);
-            path.lineTo(point6.x, point6.y);
-            path.close();
+        if (type == 3) {
+            point4.set(point3.x, this.y);
+            point5.set(point4.x + this.WIDTH / 2, this.y - this.HEIGHT);
+            point6.set(point4.x + this.WIDTH, this.y);
+            canvas.drawPath(getPath(point4, point5, point6), paint);
 
-            canvas.drawPath(path, paint);
+            point7.set(point6.x, this.y);
+            point8.set(point7.x + this.WIDTH / 2, this.y - this.HEIGHT);
+            point9.set(point7.x + this.WIDTH, this.y);
+
+            canvas.drawPath(getPath(point7, point8, point9), paint);
         }
     }
 
@@ -74,16 +88,18 @@ public class Obstacle {
     // check if back corner point is inside triangle
     public boolean backCollision(Rect rect) {
         if (type == 1) return crossProduct(point2, point3, rect.left, rect.bottom) <= 0;
-        else return crossProduct(point5, point6, rect.left, rect.bottom) <= 0;
-
+        else if (type == 2) return crossProduct(point5, point6, rect.left, rect.bottom) <= 0;
+        else return crossProduct(point8, point9, rect.left, rect.bottom) <= 0;
     }
 
     // check if point x, y is inside rectangle around obstacles
     public boolean isInArea(int rectX, int rectY) {
         if (type == 1)
             return rectX >= point1.x && rectX < point3.x && rectY > point2.y;
-        else {
+        else if (type == 2) {
             return rectX >= point1.x && rectX < point6.x && rectY > point2.y;
+        } else {
+            return rectX >= point1.x && rectX < point9.x && rectY > point2.y;
         }
     }
 
@@ -91,8 +107,10 @@ public class Obstacle {
     public boolean xIsInArea(int rectX) {
         if (type == 1)
             return rectX >= point1.x && rectX < point3.x;
-        else {
+        else if (type == 2) {
             return rectX >= point1.x && rectX < point6.x;
+        } else {
+            return rectX >= point1.x && rectX < point9.x;
         }
     }
 

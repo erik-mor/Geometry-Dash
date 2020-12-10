@@ -2,6 +2,7 @@ package com.example.geometry_dash;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.view.WindowManager;
@@ -40,5 +41,12 @@ public class GameActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         gameView.resume();
+    }
+
+    @Override
+    public void onBackPressed() {
+        gameView.pause();
+        finish();
+        startActivity(new Intent(this, MainActivity.class));
     }
 }
