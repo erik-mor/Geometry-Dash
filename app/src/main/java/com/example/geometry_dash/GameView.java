@@ -105,7 +105,7 @@ public class GameView extends SurfaceView implements Runnable {
 
         this.obstacles = obstacles;
         current= 0;
-        obstacle = new Obstacle(screenX - 100, 640, obstacles[current]);
+        obstacle = new Obstacle(screenX - 200, BOTTOM, obstacles[current]);
     }
 
     @Override
@@ -137,7 +137,18 @@ public class GameView extends SurfaceView implements Runnable {
             obstacle.setX(obstacle.getX() - SPEED);
 
             // if obstacle is out of screen, move it to the start
-            int margin = obstacle.type == 1 ? obstacle.WIDTH : obstacle.WIDTH * 2;
+            int margin = 0;
+            switch (obstacle.type) {
+                case 1:
+                    margin = obstacle.WIDTH;
+                    break;
+                case 2:
+                    margin = obstacle.WIDTH * 2;
+                    break;
+                case 3:
+                    margin = obstacle.WIDTH * 3;
+                    break;
+            }
             if (obstacle.getX() + margin <= 0) {
                 current++;
                 // if it was last obstacle game is finished
@@ -190,7 +201,7 @@ public class GameView extends SurfaceView implements Runnable {
             canvas.drawBitmap(background2.background, background2.x, background2.y, paint);
             canvas.drawLine(0, 640, screenX, 640, linePaint);
 
-            // if game finished successfully draw end blicking gate or else draw obstacle
+            // if game finished successfully draw blicking gate at the end of screen or else draw obstacle
             if (!isFinished) {
                 obstacle.draw(canvas, rectPaint);
             } else {
@@ -200,7 +211,7 @@ public class GameView extends SurfaceView implements Runnable {
                 canvas.drawLine(screenX, 0, screenX, screenY, blickPaint);
             }
 
-            // if game ends draw info text and menu button
+            // if game ends, draw info text and menu button
             if (isPlaying) {
                 canvas.drawRect(rect, rectPaint);
             } else {
@@ -245,7 +256,7 @@ public class GameView extends SurfaceView implements Runnable {
     private void restart() {
         rect.set(150, RECTANGLE_TOP, 250 , BOTTOM);
         current = 0;
-        obstacle = new Obstacle(screenX - 100, 640, obstacles[current]);
+        obstacle = new Obstacle(screenX - 200, BOTTOM, obstacles[current]);
         isJumping = false;
         jumpState = 0;
         resume();
@@ -270,7 +281,7 @@ public class GameView extends SurfaceView implements Runnable {
         setProgress();
     }
 
-    // ved collision happens print info on screen and stop music
+    // when collision happens print info on screen and stop music
     private void collision() {
         if (explode.isPlaying()) {
             explode.pause();
